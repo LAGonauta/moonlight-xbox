@@ -225,8 +225,7 @@ void StreamPage::guideButtonLong_Click(Platform::Object^ sender, Windows::UI::Xa
 	this->m_main->SendGuideButton(3000);
 }
 
-
-void moonlight_xbox_dx::StreamPage::toggleHDR_WinAltB_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
+void StreamPage::toggleHDR_WinAltB_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
 {
 	this->m_main->SendWinAltB();
 }

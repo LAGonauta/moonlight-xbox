@@ -100,7 +100,7 @@ void AppPage::resumeAppButton_Click(Platform::Object^ sender, Windows::UI::Xaml:
 
 void AppPage::closeAppButton_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
 {
-  MoonlightClient client;
+  	MoonlightClient client;
 	auto ipAddr = Utils::PlatformStringToStdString(Host->LastHostname);
 	int status = client.Connect(ipAddr.c_str());
 	if (status == 0) {

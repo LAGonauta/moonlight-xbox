@@ -32,7 +32,6 @@ HostSettingsPage::HostSettingsPage()
 	this->Unloaded += ref new Windows::UI::Xaml::RoutedEventHandler(this, &HostSettingsPage::OnUnloaded);
 }
 
-
 void HostSettingsPage::OnNavigatedTo(Windows::UI::Xaml::Navigation::NavigationEventArgs^ e) {
 	MoonlightHost^ mhost = dynamic_cast<MoonlightHost^>(e->Parameter);
 	if (mhost == nullptr)return;
@@ -99,7 +98,6 @@ void HostSettingsPage::OnBackRequested(Platform::Object^ e, Windows::UI::Core::B
 	GetApplicationState()->UpdateFile();
 	this->Frame->GoBack();
 	args->Handled = true;
-
 }
 
 void HostSettingsPage::ResolutionSelector_SelectionChanged(Platform::Object^ sender, Windows::UI::Xaml::Controls::SelectionChangedEventArgs^ e)
@@ -118,12 +116,10 @@ void HostSettingsPage::AutoStartSelector_SelectionChanged(Platform::Object^ send
 	}
 }
 
-
 void HostSettingsPage::GlobalSettingsOption_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
 {
 	this->Frame->Navigate(Windows::UI::Xaml::Interop::TypeName(MoonlightSettings::typeid));
 }
-
 
 void HostSettingsPage::BitrateInput_KeyDown(Platform::Object^ sender, Windows::UI::Xaml::Input::KeyRoutedEventArgs^ e)
 {
