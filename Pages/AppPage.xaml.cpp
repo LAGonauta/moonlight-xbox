@@ -27,15 +27,18 @@ using namespace Windows::UI::Xaml::Navigation;
 
 AppPage::AppPage()
 {
-	auto navigation = Windows::UI::Core::SystemNavigationManager::GetForCurrentView();
-	navigation->BackRequested += ref new EventHandler<BackRequestedEventArgs^>(this, &AppPage::OnBackRequested);
 	InitializeComponent();
 	Windows::UI::ViewManagement::ApplicationView::GetForCurrentView()->SetDesiredBoundsMode(Windows::UI::ViewManagement::ApplicationViewBoundsMode::UseVisible);
+
+	this->Loaded += ref new Windows::UI::Xaml::RoutedEventHandler(this, &AppPage::OnLoaded);
+	this->Unloaded += ref new Windows::UI::Xaml::RoutedEventHandler(this, &AppPage::OnUnloaded);
 }
 
 void AppPage::OnNavigatedTo(Windows::UI::Xaml::Navigation::NavigationEventArgs^ e) {
 	MoonlightHost^ mhost = dynamic_cast<MoonlightHost^>(e->Parameter);
-	if (mhost == nullptr)return;
+	if (mhost == nullptr) {
+		return;
+	}
 	host = mhost;
 	host->UpdateStats();
 	host->UpdateApps();
@@ -49,9 +52,7 @@ void AppPage::OnNavigatedTo(Windows::UI::Xaml::Navigation::NavigationEventArgs^ 
 	GetApplicationState()->shouldAutoConnect = false;
 }
 
-
-
-void moonlight_xbox_dx::AppPage::AppsGrid_ItemClick(Platform::Object^ sender, Windows::UI::Xaml::Controls::ItemClickEventArgs^ e)
+void AppPage::AppsGrid_ItemClick(Platform::Object^ sender, Windows::UI::Xaml::Controls::ItemClickEventArgs^ e)
 {
 	MoonlightApp^ app = (MoonlightApp^)e->ClickedItem;
 	this->Connect(app->Id);
@@ -76,7 +77,7 @@ void AppPage::Connect(int appId) {
 }
 
 
-void moonlight_xbox_dx::AppPage::HostsGrid_RightTapped(Platform::Object^ sender, Windows::UI::Xaml::Input::RightTappedRoutedEventArgs^ e)
+void AppPage::HostsGrid_RightTapped(Platform::Object^ sender, Windows::UI::Xaml::Input::RightTappedRoutedEventArgs^ e)
 {
 	FrameworkElement^ senderElement = (FrameworkElement^)e->OriginalSource;
 	currentApp = (MoonlightApp^)senderElement->DataContext;
@@ -84,39 +85,55 @@ void moonlight_xbox_dx::AppPage::HostsGrid_RightTapped(Platform::Object^ sender,
 }
 
 
-void moonlight_xbox_dx::AppPage::resumeAppButton_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
+void AppPage::resumeAppButton_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
 {
 	this->Connect(this->currentApp->Id);
 }
 
 
-void moonlight_xbox_dx::AppPage::closeAppButton_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
+void AppPage::closeAppButton_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
 {
-	auto client = new MoonlightClient();
+	MoonlightClient client;
 	char ipAddressStr[2048];
 	wcstombs_s(NULL, ipAddressStr, Host->LastHostname->Data(), 2047);
-	int status = client->Connect(ipAddressStr);
-	if (status == 0)client->StopApp();
+	int status = client.Connect(ipAddressStr);
+	if (status == 0) {
+		client.StopApp();
+	}
 	host->UpdateStats();
 }
 
 
-void moonlight_xbox_dx::AppPage::backButton_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
+void AppPage::backButton_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
 {
 	this->Frame->GoBack();
 }
 
 
-void moonlight_xbox_dx::AppPage::settingsButton_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
+void AppPage::settingsButton_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
 {
 	bool result = this->Frame->Navigate(Windows::UI::Xaml::Interop::TypeName(HostSettingsPage::typeid), Host);
 }
 
-void moonlight_xbox_dx::AppPage::OnBackRequested(Platform::Object^ e, Windows::UI::Core::BackRequestedEventArgs^ args)
+void AppPage::OnBackRequested(Platform::Object^ e, Windows::UI::Core::BackRequestedEventArgs^ args)
 {
 	// UWP on Xbox One triggers a back request whenever the B
 	// button is pressed which can result in the app being
 	// suspended if unhandled
-	this->Frame->GoBack();
-	args->Handled = true;
+	if (this->Frame->CanGoBack) {
+		this->Frame->GoBack();
+		args->Handled = true;
+	}
+}
+
+void AppPage::OnLoaded(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
+{
+	auto navigation = Windows::UI::Core::SystemNavigationManager::GetForCurrentView();
+	m_back_cookie = navigation->BackRequested += ref new EventHandler<BackRequestedEventArgs^>(this, &AppPage::OnBackRequested);
+}
+
+void AppPage::OnUnloaded(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
+{
+	auto navigation = Windows::UI::Core::SystemNavigationManager::GetForCurrentView();
+	navigation->BackRequested -= m_back_cookie;
 }
