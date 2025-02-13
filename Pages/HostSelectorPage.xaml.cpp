@@ -4,6 +4,9 @@
 //
 
 #include "pch.h"
+#include <sstream>
+#include <array>
+
 #include "HostSelectorPage.xaml.h"
 #include "AppPage.xaml.h"
 #include <State\MoonlightClient.h>
@@ -12,6 +15,7 @@
 #include "MoonlightSettings.xaml.h"
 #include "State\MDNSHandler.h"
 #include "MoonlightWelcome.xaml.h"
+#include "Utils.hpp"
 
 using namespace moonlight_xbox_dx;
 
@@ -59,7 +63,7 @@ void HostSelectorPage::OnNewHostDialogPrimaryClick(Windows::UI::Xaml::Controls::
 	Concurrency::create_task([def, hostname, this, args, sender]() {
 		bool status = state->AddHost(hostname);
 		if (!status) {
-			Windows::ApplicationModel::Core::CoreApplication::MainView->CoreWindow->Dispatcher->RunAsync(Windows::UI::Core::CoreDispatcherPriority::High, ref new Windows::UI::Core::DispatchedHandler([sender, this, hostname, def, args]() {
+			Windows::ApplicationModel::Core::CoreApplication::MainView->CoreWindow->Dispatcher->RunAsync(Windows::UI::Core::CoreDispatcherPriority::High, ref new Windows::UI::Core::DispatchedHandler([sender, hostname, def, args]() {
 				args->Cancel = true;
 				sender->Content = L"Failed to Connect to " + hostname;
 				def->Complete();
@@ -79,23 +83,23 @@ void HostSelectorPage::GridView_ItemClick(Platform::Object^ sender, Windows::UI:
 }
 
 void HostSelectorPage::StartPairing(MoonlightHost^ host) {
-	MoonlightClient* client = new MoonlightClient();
-	char ipAddressStr[2048];
-	wcstombs_s(NULL, ipAddressStr, host->LastHostname->Data(), 2047);
-	int status = client->Connect(ipAddressStr);
-	if (status != 0)return;
-	char* pin = client->GeneratePIN();
+	auto client = std::make_shared<MoonlightClient>();
+	int status = client->Connect(Utils::WideToNarrowString(host->LastHostname->Data()));
+	if (status != 0) {
+		return;
+	}
+	auto pin = client->GeneratePIN();
 	ContentDialog^ dialog = ref new ContentDialog();
-	wchar_t msg[4096];
-	swprintf(msg, 4096, L"We need to pair the host before continuing. Type %S on your host to continue", pin);
-	dialog->Content = ref new Platform::String(msg);
+	std::wstringstream msg;
+	msg << L"We need to pair the host before continuing. Type " << pin << L" on your host to continue";
+	dialog->Content = ref new Platform::String(msg.str().c_str());
 	dialog->PrimaryButtonText = "Ok";
 	dialog->ShowAsync();
-	Concurrency::create_task([dialog, host, client, pin]() {
-		int a = client->Pair();
-		Windows::ApplicationModel::Core::CoreApplication::MainView->CoreWindow->Dispatcher->RunAsync(Windows::UI::Core::CoreDispatcherPriority::High, ref new Windows::UI::Core::DispatchedHandler([a, dialog, host]()
+	Concurrency::create_task([dialog, host, client]() {
+		auto err = client->Pair();
+		Windows::ApplicationModel::Core::CoreApplication::MainView->CoreWindow->Dispatcher->RunAsync(Windows::UI::Core::CoreDispatcherPriority::High, ref new Windows::UI::Core::DispatchedHandler([err, dialog, host, client]()
 			{
-				if (a == 0) {
+				if (err == 0) {
 					dialog->Hide();
 				}
 				else {
@@ -152,7 +156,7 @@ void HostSelectorPage::OnStateLoaded() {
 		}).then([this]() {
 			if (GetApplicationState()->autostartInstance.size() > 0) {
 				auto pii = Utils::StringFromStdString(GetApplicationState()->autostartInstance);
-				for (int i = 0; i < GetApplicationState()->SavedHosts->Size; i++) {
+				for (unsigned int i = 0; i < GetApplicationState()->SavedHosts->Size; i++) {
 					auto host = GetApplicationState()->SavedHosts->GetAt(i);
 					if (host->InstanceId->Equals(pii)) {
 						auto that = this;
