@@ -13,6 +13,8 @@ extern "C" {
 #include <gamingdeviceinformation.h>
 #include <atomic>
 
+#include <sstream>
+
 using namespace moonlight_xbox_dx;
 using namespace Windows::Gaming::Input;
 using namespace Windows::Graphics::Display;
@@ -193,12 +195,7 @@ MoonlightClient::MoonlightClient() :
 	}
 }
 
-MoonlightClient::~MoonlightClient() {
-	if (hostname != NULL) {
-		free(hostname);
-		hostname = NULL;
-	}
-}
+MoonlightClient::~MoonlightClient() {}
 
 void MoonlightClient::StopApp() {
 	gs_quit_app(&serverData);
@@ -208,11 +205,7 @@ int MoonlightClient::StartStreaming(std::shared_ptr<DX::DeviceResources> res, St
 	GetGamingDeviceModelInformation(&info);
 	bool isXboxOne = (info.vendorId == GAMING_DEVICE_VENDOR_ID_MICROSOFT && info.deviceId == GAMING_DEVICE_DEVICE_ID_XBOX_ONE);
 
-	//Thanks to https://stackoverflow.com/questions/11746146/how-to-convert-platformstring-to-char
-	std::wstring fooW(sConfig->hostname->Begin());
-	std::string fooA(fooW.begin(), fooW.end());
-	const char* charStr = fooA.c_str();
-	this->Connect(charStr);
+	this->Connect(Utils::PlatformStringToStdString(sConfig->hostname));
 	STREAM_CONFIGURATION config;
 	LiInitializeStreamConfiguration(&config);
 	config.width = sConfig->width;
@@ -368,23 +361,23 @@ void connection_trigger_rumble(unsigned short controllerNumber, unsigned short l
 	gp->Vibration = v;
 }
 
-int MoonlightClient::Connect(const char* hostname) {
-	this->hostname = (char*)malloc(2048 * sizeof(char));
-	strcpy_s(this->hostname, 2048, hostname);
-	if (strchr(this->hostname, ':') != 0) {
-		char portStr[2048];
-		strcpy_s(portStr, 2048, strchr(this->hostname, ':') + 1);
-		port = atoi(portStr);
-		*strchr(this->hostname, ':') = '\0';
+int MoonlightClient::Connect(const std::string& hostname) {
+	this->hostname = hostname;
+
+	auto pos = this->hostname.find(":");
+	if (pos != std::string::npos) {
+		auto portStr = this->hostname.substr(pos + 1, this->hostname.size());
+		port = atoi(portStr.c_str());
+		this->hostname.resize(pos);
 	}
 
 	Platform::String^ folderString = Windows::Storage::ApplicationData::Current->LocalFolder->Path;
 	folderString = folderString->Concat(folderString, "\\");
-	char folder[2048];
-	wcstombs_s(NULL, folder, folderString->Data(), 2047);
 
-	int status = 0;
-	status = gs_init(&serverData, this->hostname, port, folder, 3, true);
+	int status = gs_init(&serverData, const_cast<char*>(this->hostname.c_str()), port, Utils::PlatformStringToStdString(folderString).c_str(), 3, true);
+	std::stringstream msg;
+	msg << "Got status " << status << " from gs_init" << std::endl;
+	Utils::Log(msg.str().c_str());
 	return status;
 }
 
@@ -400,17 +393,24 @@ bool MoonlightClient::IsPaired() {
 	return serverData.paired;
 }
 
-char* MoonlightClient::GeneratePIN() {
-	srand(time(NULL));
-	if (connectionPin == NULL)connectionPin = (char*)malloc(5 * sizeof(char));
-	sprintf(connectionPin, "%d%d%d%d", rand() % 10, rand() % 10, rand() % 10, rand() % 10);
-	return connectionPin;
+std::wstring MoonlightClient::GeneratePIN() {
+	srand(time(nullptr));
+
+	std::wstringstream pin;
+	pin << rand() % 10 << rand() % 10 << rand() % 10 << rand() % 10;
+
+	connectionPin = Utils::WideToNarrowString(pin.str());
+
+	return pin.str();
 }
 
 int MoonlightClient::Pair() {
-	if (serverData.paired)return -7;
+	if (serverData.paired) {
+		return -7;
+	}
+
 	int status;
-	if ((status = gs_pair(&serverData, &connectionPin[0])) != 0) {
+	if ((status = gs_pair(&serverData, const_cast<char*>(connectionPin.c_str()))) != 0) {
 		//TODO: Handle gs WRONG STATE
 		gs_unpair(&serverData);
 		return status;
