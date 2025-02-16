@@ -16,10 +16,10 @@ namespace moonlight_xbox_dx {
 	public:
 		MoonlightClient();
 		int StartStreaming(std::shared_ptr<DX::DeviceResources> res, StreamConfiguration ^config);
-		int Connect(const char* hostname);
+		int Connect(const std::string& hostname);
 		bool IsPaired();
 		int Pair();
-		char *GeneratePIN();
+		std::wstring GeneratePIN();
 		std::vector<MoonlightApp^> MoonlightClient::GetApplications();
 		void SendGamepadReading(short controllerNumber, Windows::Gaming::Input::GamepadReading reading);
 		void SendMousePosition(float x, float y);
@@ -45,9 +45,9 @@ namespace moonlight_xbox_dx {
 		std::function<void(bool)> SetHDR;
 		std::function<void(int,int, char*)> OnFailed;
 	private:
-		SERVER_DATA serverData;
-		char* connectionPin = NULL;
-		char* hostname = NULL;
+		SERVER_DATA serverData{};
+		std::string connectionPin;
+		std::string hostname;
 		int port = 0;
 		bool useSoftwareEncoder = false;
 		int activeGamepadMask = 0;
