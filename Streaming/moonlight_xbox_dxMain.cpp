@@ -148,6 +148,9 @@ void moonlight_xbox_dxMain::ProcessInput()
 	auto gamepads = Windows::Gaming::Input::Gamepad::Gamepads;
 	if (gamepads->Size == 0)return;
 	moonlightClient->SetGamepadCount(gamepads->Size);
+	if (m_previousReading.size() < gamepads->Size) {
+		m_previousReading.resize(gamepads->Size);
+	}
 	auto state = GetApplicationState();
 	//Position
 	double multiplier = ((double)state->MouseSensitivity) / ((double)4.0f);

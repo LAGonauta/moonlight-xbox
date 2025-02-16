@@ -55,7 +55,7 @@ namespace moonlight_xbox_dx
 		// Track current input pointer position.
 		float m_pointerLocationX;
 		bool insideFlyout = false;
-		Windows::Gaming::Input::GamepadReading previousReading[8];
+		std::vector<Windows::Gaming::Input::GamepadReading> m_previousReading;
 		StreamPage^ m_streamPage;
 		MoonlightClient* moonlightClient;
 	};
