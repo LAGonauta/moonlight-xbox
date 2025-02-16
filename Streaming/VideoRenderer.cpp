@@ -208,7 +208,7 @@ void VideoRenderer::CreateDeviceDependentResources()
 	auto createVSTask = DX::ReadDataAsync(L"Assets\\Shader\\d3d11_vertex.fxc").then([this](const std::vector<byte>& fileData) {
 		DX::ThrowIfFailed(
 			m_deviceResources->GetD3DDevice()->CreateVertexShader(
-				&fileData[0],
+				fileData.data(),
 				fileData.size(),
 				nullptr,
 				&m_vertexShader
@@ -225,7 +225,7 @@ void VideoRenderer::CreateDeviceDependentResources()
 			m_deviceResources->GetD3DDevice()->CreateInputLayout(
 				vertexDesc,
 				ARRAYSIZE(vertexDesc),
-				&fileData[0],
+				fileData.data(),
 				fileData.size(),
 				&m_inputLayout
 			)
@@ -236,7 +236,7 @@ void VideoRenderer::CreateDeviceDependentResources()
 	auto createPSTaskGen = DX::ReadDataAsync(L"Assets\\Shader\\d3d11_genyuv_pixel.fxc").then([this](const std::vector<byte>& fileData) {
 		DX::ThrowIfFailed(
 			m_deviceResources->GetD3DDevice()->CreatePixelShader(
-				&fileData[0],
+				fileData.data(),
 				fileData.size(),
 				nullptr,
 				&m_pixelShaderGeneric
@@ -247,7 +247,7 @@ void VideoRenderer::CreateDeviceDependentResources()
 	auto createPSTaskBT601 = DX::ReadDataAsync(L"Assets\\Shader\\d3d11_bt601lim_pixel.fxc").then([this](const std::vector<byte>& fileData) {
 		DX::ThrowIfFailed(
 			m_deviceResources->GetD3DDevice()->CreatePixelShader(
-				&fileData[0],
+				fileData.data(),
 				fileData.size(),
 				nullptr,
 				&m_pixelShaderBT601
@@ -258,7 +258,7 @@ void VideoRenderer::CreateDeviceDependentResources()
 	auto createPSTaskBT2020 = DX::ReadDataAsync(L"Assets\\Shader\\d3d11_bt2020lim_pixel.fxc").then([this](const std::vector<byte>& fileData) {
 		DX::ThrowIfFailed(
 			m_deviceResources->GetD3DDevice()->CreatePixelShader(
-				&fileData[0],
+				fileData.data(),
 				fileData.size(),
 				nullptr,
 				&m_pixelShaderBT2020
