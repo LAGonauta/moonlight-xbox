@@ -1,14 +1,15 @@
 #pragma once
 #include "pch.h"
+#include <vector>
+
 extern "C" {
 #include <Limelight.h>
 #include <opus/opus_multistream.h>
-
+#include "third_party/miniaudio.h"
 }
-#define BUFFER_COUNT 64
+
 namespace moonlight_xbox_dx
 {
-
 	class AudioPlayer {
 	public:
 		int Init(int audioConfiguration, const POPUS_MULTISTREAM_CONFIGURATION opusConfig, void* context, int arFlags);
@@ -16,14 +17,14 @@ namespace moonlight_xbox_dx
 		void Stop();
 		void Cleanup();
 		int SubmitDU(char* sampleData, int sampleLength);
-		static AudioPlayer* getInstance();
 		static AUDIO_RENDERER_CALLBACKS getDecoder();
-		bool setup = false;
-		int channelCount;
+		ma_pcm_rb m_rb;
 	private:
-		OpusMSDecoder* decoder;
-		int sampleRate;
-		int samplePerFrame;
-		opus_int16 pcmBuffer[240 * 6];
+		OpusMSDecoder* m_decoder;
+		int m_sampleRate;
+		size_t dropCount{};
+		ma_device m_device;
+
+		std::vector<opus_int16> m_pcmBuffer;
 	};
 }

@@ -14,7 +14,7 @@
 // Renders Direct2D and 3D content on the screen.
 namespace moonlight_xbox_dx
 {
-	class moonlight_xbox_dxMain : public DX::IDeviceNotify, std::enable_shared_from_this<moonlight_xbox_dxMain>
+	class moonlight_xbox_dxMain : public DX::IDeviceNotify, public std::enable_shared_from_this<moonlight_xbox_dxMain>
 	{
 	public:
 		static std::shared_ptr<moonlight_xbox_dxMain> New(std::shared_ptr<DX::DeviceResources> deviceResources, StreamPage^ streamPage, StreamConfiguration^ configuration);
