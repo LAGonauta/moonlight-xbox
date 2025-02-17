@@ -17,7 +17,7 @@ namespace moonlight_xbox_dx {
         bool connected;
         bool loading = true;
         bool playAudioOnPC = false;
-        MoonlightClient* client;
+        std::shared_ptr<MoonlightClient> client;
         int currentlyRunningAppId;
         int bitrate = 8000;
         ScreenResolution^ resolution;

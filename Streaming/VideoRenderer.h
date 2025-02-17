@@ -20,7 +20,7 @@ namespace moonlight_xbox_dx
 	class VideoRenderer
 	{
 	public:
-		VideoRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources,MoonlightClient *client,StreamConfiguration ^sConfig);
+		VideoRenderer(std::shared_ptr<DX::DeviceResources> deviceResources, std::shared_ptr<MoonlightClient> client,StreamConfiguration ^sConfig);
 		void CreateDeviceDependentResources();
 		void CreateWindowSizeDependentResources();
 		void ReleaseDeviceDependentResources();
@@ -57,7 +57,7 @@ namespace moonlight_xbox_dx
 		bool	m_loadingComplete;
 		bool	m_LastFullRange;
 		int		m_LastColorSpace;
-		MoonlightClient *client;
+		std::shared_ptr<MoonlightClient> client;
 		StreamConfiguration^ configuration;
 	};
 }

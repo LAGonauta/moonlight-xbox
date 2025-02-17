@@ -76,7 +76,7 @@ static_assert(sizeof(CSC_CONST_BUF) % 16 == 0, "Constant buffer sizes must be a 
 
 
 // Loads vertex and pixel shaders from files and instantiates the cube geometry.
-VideoRenderer::VideoRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources, MoonlightClient* mclient, StreamConfiguration^ sConfig) :
+VideoRenderer::VideoRenderer(std::shared_ptr<DX::DeviceResources> deviceResources, std::shared_ptr<MoonlightClient> mclient, StreamConfiguration^ sConfig) :
 	m_loadingComplete(false),
 	m_deviceResources(deviceResources),
 	client(mclient),
@@ -378,7 +378,7 @@ void VideoRenderer::CreateDeviceDependentResources()
 	renderTextureDesc.CPUAccessFlags = 0;
 	renderTextureDesc.MiscFlags = 0;
 	Microsoft::WRL::ComPtr<IDXGIResource1> dxgiResource;
-	createCubeTask.then([this, width, height]() {
+	createCubeTask.then([this, client = this->client, width, height]() {
 		int status = client->StartStreaming(m_deviceResources, configuration);
 		if (status != 0) {
 			Windows::UI::Xaml::Controls::ContentDialog^ dialog = ref new Windows::UI::Xaml::Controls::ContentDialog();

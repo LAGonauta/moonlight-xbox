@@ -2,6 +2,7 @@
 #include "MoonlightHost.h"
 #include "State\MoonlightClient.h"
 #include <ppltasks.h>
+#include "Utils.hpp"
 
 namespace moonlight_xbox_dx {
 	void MoonlightHost::UpdateStats() {
@@ -23,7 +24,7 @@ namespace moonlight_xbox_dx {
 
 	int MoonlightHost::Connect()
 	{
-		client = new MoonlightClient();
+		client = std::make_shared<MoonlightClient>();
 		Platform::String^ ipAddress = this->lastHostname;
 
 		return client->Connect(Utils::PlatformStringToStdString(ipAddress));

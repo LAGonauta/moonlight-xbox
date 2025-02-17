@@ -77,7 +77,7 @@ namespace moonlight_xbox_dx
 
 		// Resources used to render the DirectX content in the XAML page background.
 		std::shared_ptr<DX::DeviceResources> m_deviceResources;
-		std::unique_ptr<moonlight_xbox_dxMain> m_main; 
+		std::shared_ptr<moonlight_xbox_dxMain> m_main;
 		bool m_windowVisible;
 		void Page_Loaded(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
 		void OnSwapChainPanelSizeChanged(Object^ sender, Windows::UI::Xaml::SizeChangedEventArgs^ e);

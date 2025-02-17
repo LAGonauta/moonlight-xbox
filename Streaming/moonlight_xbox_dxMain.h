@@ -1,5 +1,9 @@
 ﻿#pragma once
 
+#include <vector>
+#include <array>
+#include <memory>
+
 #include "Common\StepTimer.h"
 #include "Common\DeviceResources.h"
 #include "Streaming\VideoRenderer.h"
@@ -10,10 +14,11 @@
 // Renders Direct2D and 3D content on the screen.
 namespace moonlight_xbox_dx
 {
-	class moonlight_xbox_dxMain : public DX::IDeviceNotify
+	class moonlight_xbox_dxMain : public DX::IDeviceNotify, std::enable_shared_from_this<moonlight_xbox_dxMain>
 	{
 	public:
-		moonlight_xbox_dxMain(const std::shared_ptr<DX::DeviceResources>& deviceResources, StreamPage^ streamPage, MoonlightClient* client, StreamConfiguration^ configuration);
+		static std::shared_ptr<moonlight_xbox_dxMain> New(std::shared_ptr<DX::DeviceResources> deviceResources, StreamPage^ streamPage, StreamConfiguration^ configuration);
+		moonlight_xbox_dxMain(std::shared_ptr<DX::DeviceResources> deviceResources, StreamPage^ streamPage, StreamConfiguration^ configuration);
 		~moonlight_xbox_dxMain();
 		void CreateWindowSizeDependentResources();
 		void TrackingUpdate(float positionX) { m_pointerLocationX = positionX; }
@@ -36,6 +41,12 @@ namespace moonlight_xbox_dx
 		void Update();
 		bool Render();
 
+		// We only want this class to be used through the shared pointer
+		moonlight_xbox_dxMain(const moonlight_xbox_dxMain&) = delete;
+		moonlight_xbox_dxMain& operator=(const moonlight_xbox_dxMain&) = delete;
+		moonlight_xbox_dxMain(moonlight_xbox_dxMain&&) = delete;
+		moonlight_xbox_dxMain& operator=(moonlight_xbox_dxMain&&) = delete;
+
 		// Cached pointer to device resources.
 		std::shared_ptr<DX::DeviceResources> m_deviceResources;
 
@@ -57,7 +68,7 @@ namespace moonlight_xbox_dx
 		bool insideFlyout = false;
 		std::vector<Windows::Gaming::Input::GamepadReading> m_previousReading;
 		StreamPage^ m_streamPage;
-		MoonlightClient* moonlightClient;
+		std::shared_ptr<MoonlightClient> m_moonlightClient;
 	};
 	void usleep(unsigned int usec);
 }
