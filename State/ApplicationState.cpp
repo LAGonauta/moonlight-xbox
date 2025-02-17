@@ -1,4 +1,7 @@
 #include "pch.h"
+#include <string>
+#include <sstream>
+
 #include "ApplicationState.h"
 #include <Utils.hpp>
 #include <nlohmann/json.hpp>
@@ -21,33 +24,40 @@ Concurrency::task<void> moonlight_xbox_dx::ApplicationState::Init()
 			this->FirstTime = true;
 			Platform::String^ jsonFile = jsonTask.get();
 			if (jsonFile != nullptr && jsonFile->Length() > 0) {
-				nlohmann::json stateJson = nlohmann::json::parse(jsonFile);
-				if (stateJson.contains("firstTime"))this->FirstTime = stateJson["firstTime"];
-				if (stateJson.contains("enableKeyboard"))this->EnableKeyboard = stateJson["enableKeyboard"];
-				if (stateJson.contains("keyboardLayout"))this->KeyboardLayout = Utils::StringFromStdString(stateJson["keyboardLayout"]);
-				if (stateJson.contains("autostartInstance"))this->autostartInstance = stateJson["autostartInstance"];
-				if (stateJson.contains("marginWidth"))this->ScreenMarginWidth = stateJson["marginWidth"];
-				if (stateJson.contains("marginHeight"))this->ScreenMarginHeight = stateJson["marginHeight"];
-				if (stateJson.contains("mouseSensitivity"))this->MouseSensitivity = stateJson["mouseSensitivity"];
-				if (stateJson.contains("alternateCombination")) this->AlternateCombination = stateJson["alternateCombination"].get<bool>();
-				for (auto a : stateJson["hosts"]) {
-					MoonlightHost^ h = ref new MoonlightHost(Utils::StringFromStdString(a["hostname"].get<std::string>()));
-					if (a.contains("instance_id")) h->InstanceId = Utils::StringFromStdString(a["instance_id"].get<std::string>());
-					if (a.contains("width") && a.contains("height")) {
-						h->Resolution = ref new ScreenResolution(a["width"], a["height"]);
+				try {
+					auto stateJson = nlohmann::json::parse(jsonFile);
+					if (stateJson.contains("firstTime"))this->FirstTime = stateJson["firstTime"];
+					if (stateJson.contains("enableKeyboard"))this->EnableKeyboard = stateJson["enableKeyboard"];
+					if (stateJson.contains("keyboardLayout"))this->KeyboardLayout = Utils::StringFromStdString(stateJson["keyboardLayout"]);
+					if (stateJson.contains("autostartInstance"))this->autostartInstance = stateJson["autostartInstance"];
+					if (stateJson.contains("marginWidth"))this->ScreenMarginWidth = stateJson["marginWidth"];
+					if (stateJson.contains("marginHeight"))this->ScreenMarginHeight = stateJson["marginHeight"];
+					if (stateJson.contains("mouseSensitivity"))this->MouseSensitivity = stateJson["mouseSensitivity"];
+					if (stateJson.contains("alternateCombination")) this->AlternateCombination = stateJson["alternateCombination"].get<bool>();
+					for (auto a : stateJson["hosts"]) {
+						MoonlightHost^ h = ref new MoonlightHost(Utils::StringFromStdString(a["hostname"].get<std::string>()));
+						if (a.contains("instance_id")) h->InstanceId = Utils::StringFromStdString(a["instance_id"].get<std::string>());
+						if (a.contains("width") && a.contains("height")) {
+							h->Resolution = ref new ScreenResolution(a["width"], a["height"]);
+						}
+						if (a.contains("bitrate"))h->Bitrate = a["bitrate"];
+						if (a.contains("fps"))h->FPS = a["fps"];
+						if (a.contains("audioConfig"))h->AudioConfig = Utils::StringFromStdString(a["audioConfig"].get<std::string>());
+						if (a.contains("videoCodec"))h->VideoCodec = Utils::StringFromStdString(a["videoCodec"].get<std::string>());
+						if (a.contains("autoStartID"))h->AutostartID = a["autoStartID"];
+						if (a.contains("computername")) h->ComputerName = Utils::StringFromStdString(a["computername"].get<std::string>());
+						if (a.contains("playaudioonpc")) h->PlayAudioOnPC = a["playaudioonpc"].get<bool>();
+						if (a.contains("enable_hdr")) h->EnableHDR = a["enable_hdr"].get<bool>();
+						if (a.contains("serverAddress")) h->ServerAddress = Utils::StringFromStdString(a["serverAddress"].get<std::string>());
+						if (a.contains("macaddress")) h->MacAddress = Utils::StringFromStdString(a["macaddress"].get<std::string>());
+						else h->ComputerName = h->LastHostname;
+						this->SavedHosts->Append(h);
 					}
-					if (a.contains("bitrate"))h->Bitrate = a["bitrate"];
-					if (a.contains("fps"))h->FPS = a["fps"];
-					if (a.contains("audioConfig"))h->AudioConfig = Utils::StringFromStdString(a["audioConfig"].get<std::string>());
-					if (a.contains("videoCodec"))h->VideoCodec = Utils::StringFromStdString(a["videoCodec"].get<std::string>());
-					if (a.contains("autoStartID"))h->AutostartID = a["autoStartID"];
-					if (a.contains("computername")) h->ComputerName = Utils::StringFromStdString(a["computername"].get<std::string>());
-					if (a.contains("playaudioonpc")) h->PlayAudioOnPC = a["playaudioonpc"].get<bool>();
-					if (a.contains("enable_hdr")) h->EnableHDR = a["enable_hdr"].get<bool>();
-					if (a.contains("serverAddress")) h->ServerAddress = Utils::StringFromStdString(a["serverAddress"].get<std::string>());
-					if (a.contains("macaddress")) h->MacAddress = Utils::StringFromStdString(a["macaddress"].get<std::string>());
-					else h->ComputerName = h->LastHostname;
-					this->SavedHosts->Append(h);
+				}
+				catch (nlohmann::json::parse_error& ex) {
+					std::stringstream ss;
+					ss << "Unable to parse JSON: " << ex.what();
+					Utils::Log(ss.str().c_str());
 				}
 			}
 		});
