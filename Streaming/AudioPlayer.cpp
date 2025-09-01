@@ -57,17 +57,26 @@ namespace moonlight_xbox_dx {
 	{
 		void* buffer;
 		ma_uint32 len = frameCount;
-		ma_result res = ma_pcm_rb_acquire_read(&audioPlayerInstance->m_rb, &len, &buffer);
-		if (res != MA_SUCCESS) {
-			Utils::Log("Failed to read audio data\n");
-			return;
-		}
-		if (len > 0) {
-			memcpy(pOutput, buffer, static_cast<size_t>(len) * ma_pcm_rb_get_bpf(&audioPlayerInstance->m_rb));
-			res = ma_pcm_rb_commit_read(&audioPlayerInstance->m_rb, len, buffer);
-			if (res != MA_SUCCESS && res != MA_AT_END) {
-				Utils::Log("Failed to read audio data to shared buffer\n");
+
+		// Fill with silence if there is not enough data
+		// If we were talking to WASAPI directly we could do a partial fill, but that is not supported by miniaudio
+		ma_uint32 availableFrames = ma_pcm_rb_available_read(&audioPlayerInstance->m_rb);
+		if (availableFrames < len) {
+			memset(pOutput, 0, static_cast<size_t>(len) * ma_pcm_rb_get_bpf(&audioPlayerInstance->m_rb));
+			Utils::Log("Not enough samples to fill, writing silence\n");
+		} else {
+			ma_result res = ma_pcm_rb_acquire_read(&audioPlayerInstance->m_rb, &len, &buffer);
+			if (res != MA_SUCCESS) {
+				Utils::Log("Failed to read audio data\n");
 				return;
+			}
+			if (len > 0) {
+				memcpy(pOutput, buffer, static_cast<size_t>(len) * ma_pcm_rb_get_bpf(&audioPlayerInstance->m_rb));
+				res = ma_pcm_rb_commit_read(&audioPlayerInstance->m_rb, len, buffer);
+				if (res != MA_SUCCESS && res != MA_AT_END) {
+					Utils::Log("Failed to read audio data to shared buffer\n");
+					return;
+				}
 			}
 		}
 	}
