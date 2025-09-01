@@ -47,7 +47,7 @@ moonlight_xbox_dxMain::moonlight_xbox_dxMain(std::shared_ptr<DX::DeviceResources
 	// Vsync forced to ON (via constructor default) until VRR works
 	// m_deviceResources->SetEnableVsync(configuration->enableVsync);
 
-	m_sceneRenderer = std::make_unique<VideoRenderer>(m_deviceResources, moonlightClient, configuration);
+	m_sceneRenderer = std::make_unique<VideoRenderer>(m_deviceResources, m_moonlightClient, configuration);
 
 	m_LogRenderer = std::make_unique<LogRenderer>(m_deviceResources);
 
@@ -459,13 +459,13 @@ void moonlight_xbox_dxMain::SendGuideButton(int duration) {
 void moonlight_xbox_dxMain::SendWinAltB() {
 	// Win-Alt-B = Toggle HDR
 	concurrency::create_async([this]() {
-		moonlightClient->KeyDown((unsigned short)Windows::System::VirtualKey::LeftWindows, 0);
-		moonlightClient->KeyDown((unsigned short)Windows::System::VirtualKey::Menu, 0);
-		moonlightClient->KeyDown((unsigned short)Windows::System::VirtualKey::B, 0);
+		m_moonlightClient->KeyDown((unsigned short)Windows::System::VirtualKey::LeftWindows, 0);
+		m_moonlightClient->KeyDown((unsigned short)Windows::System::VirtualKey::Menu, 0);
+		m_moonlightClient->KeyDown((unsigned short)Windows::System::VirtualKey::B, 0);
 		Sleep(100);
-		moonlightClient->KeyUp((unsigned short)Windows::System::VirtualKey::B, 0);
-		moonlightClient->KeyUp((unsigned short)Windows::System::VirtualKey::Menu, 0);
-		moonlightClient->KeyUp((unsigned short)Windows::System::VirtualKey::LeftWindows, 0);
+		m_moonlightClient->KeyUp((unsigned short)Windows::System::VirtualKey::B, 0);
+		m_moonlightClient->KeyUp((unsigned short)Windows::System::VirtualKey::Menu, 0);
+		m_moonlightClient->KeyUp((unsigned short)Windows::System::VirtualKey::LeftWindows, 0);
 	});
 }
 
